@@ -1,4 +1,61 @@
-# 数据处理：
+import warnings
+# 忽视警告
+warnings.filterwarnings('ignore')
+
+import cv2
+from PIL import Image
+import numpy as np
+import copy
+import matplotlib.pyplot as plt
+from tqdm.auto import tqdm
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torchvision.datasets import ImageFolder
+import torchvision.transforms as T
+from torch.utils.data import DataLoader
+from torch_py.Utils import plot_image
+from torch_py.MTCNN.detector import FaceDetector
+from torch_py.MobileNetV2 import MobileNetV2
+from torch_py.FaceRec2 import Recognition
+# 数据集路径
+data_path = "./datasets/5f680a696ec9b83bb0037081-momodel/data/"
+mask_num = 4
+fig = plt.figure(figsize=(15, 15))
+for i in range(mask_num):
+    sub_img = cv2.imread(data_path + "/image/mask/mask_" + str(i + 101) + ".jpg")
+    sub_img = cv2.cvtColor(sub_img, cv2.COLOR_RGB2BGR)
+    ax = fig.add_subplot(4, 4, (i + 1))
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_title("mask_" + str(i + 1))
+    ax.imshow(sub_img)
+nomask_num = 4
+fig1 = plt.figure(figsize=(15, 15))
+for i in range(nomask_num):
+    sub_img = cv2.imread(data_path + "/image/nomask/nomask_" + str(i + 130) + ".jpg")
+    sub_img = cv2.cvtColor(sub_img, cv2.COLOR_RGB2BGR)
+    ax = fig1.add_subplot(4, 4, (i + 1))
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_title("nomask_" + str(i + 1))
+    ax.imshow(sub_img)
+def letterbox_image(image, size):
+    """
+    调整图片尺寸
+    :param image: 用于训练的图片
+    :param size: 需要调整到网络输入的图片尺寸
+    :return: 返回经过调整的图片
+    """
+    new_image = cv2.resize(image, size, interpolation=cv2.INTER_AREA)
+    return new_image
+# 使用 PIL.Image 读取图片
+read_img = Image.open("test1.jpg")
+read_img = np.array(read_img)
+print("调整前图片的尺寸:", read_img.shape)
+read_img = letterbox_image(image=read_img, size=(50, 50))
+read_img = np.array(read_img)
+print("调整前图片的尺寸:", read_img.shape)
 def processing_data(data_path, height=224, width=224, batch_size=32,
                     test_split=0.1):
     """
@@ -8,7 +65,7 @@ def processing_data(data_path, height=224, width=224, batch_size=32,
     :param width: 宽度
     :param batch_size: 每次读取图片的数量
     :param test_split: 测试集划分比例
-    :return: 
+    :return:
     """
     transforms = T.Compose([
         T.Resize((height, width)),
@@ -37,13 +94,11 @@ def show_tensor_img(img_tensor):
     img = np.swapaxes(img, 0, 1)
     img = np.array(img)
     plot_image(img)
-    
+
 for index, (x, labels) in enumerate(train_data_loader):
     print(index, "\nfeature:",x[0], "\nlabels:",labels)
     show_tensor_img(x)
     break
-# ====================================================================
-# 人脸检测：
 pnet_path = "./torch_py/MTCNN/weights/pnet.npy"
 rnet_path = "./torch_py/MTCNN/weights/rnet.npy"
 onet_path = "./torch_py/MTCNN/weights/onet.npy"
@@ -54,26 +109,22 @@ img = Image.open("test.jpg")
 recognize = Recognition()
 draw = recognize.face_recognize(img)
 plot_image(draw)
-# ====================================================================
-# 口罩识别：
 # 加载 MobileNet 的预训练模型权
 device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
-train_data_loader, valid_data_loader = processing_data(data_path=data_path, height=160, width=160, batch_size=32)
+train_data_loader, valid_data_loader = processing_data(data_path=data_path, height=224, width=224, batch_size=32)
 modify_x, modify_y = torch.ones((32, 3, 160, 160)), torch.ones((32))
 
-epochs = 10
-model = MobileNetV1(classes=2).to(device)
+epochs = 30
+model = MobileNetV2(num_class=2).to(device)
 optimizer = optim.Adam(model.parameters(), lr=1e-3)  # 优化器
 print('加载完成...')
-# 学习率下降的方式，acc三次不下降就下降学习率继续训练，衰减学习率
+# 学习率下降的方式，acc四次不下降就下降学习率继续训练，衰减学习率
 scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer,
-                                                 'max', 
-                                                 factor=0.75,
-                                                 patience=3)
+                                                 'max',
+                                                 factor=0.5,
+                                                 patience=4)
 # 损失函数
-criterion = nn.CrossEntropyLoss()  
-# ====================================================================
-# 模型训练：
+criterion = nn.CrossEntropyLoss()
 best_loss = 1e9
 best_model_weights = copy.deepcopy(model.state_dict())
 loss_list = []  # 存储损失函数值
@@ -96,7 +147,7 @@ for epoch in range(epochs):
         if loss < best_loss:
             best_model_weights = copy.deepcopy(model.state_dict())
             best_loss = loss
-            
+
         loss_list.append(loss)
 
     print('step:' + str(epoch + 1) + '/' + str(epochs) + ' || Total Loss: %.4f' % (loss))

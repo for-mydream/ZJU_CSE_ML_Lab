@@ -1,8 +1,24 @@
+import warnings
+# 忽视警告
+warnings.filterwarnings('ignore')
+
+import cv2
+from PIL import Image
+import numpy as np
+import copy
+import matplotlib.pyplot as plt
+from tqdm.auto import tqdm
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torchvision.datasets import ImageFolder
+import torchvision.transforms as T
+from torch.utils.data import DataLoader
+
 from torch_py.Utils import plot_image
 from torch_py.MTCNN.detector import FaceDetector
-from torch_py.MobileNetV1 import MobileNetV1
-from torch_py.FaceRec import Recognition
-from torch_py.FaceRec import Recognition
+from torch_py.MobileNetV2 import MobileNetV2
+from torch_py.FaceRec2 import Recognition
 from PIL import Image
 import cv2
 
@@ -10,7 +26,7 @@ import cv2
 # 加载模型(请加载你认为的最佳模型)
 # 加载模型,加载请注意 model_path 是相对路径, 与当前文件同级。
 # 如果你的模型是在 results 文件夹下的 dnn.h5 模型，则 model_path = 'results/temp.pth'
-model_path = 'results/temp.pth'
+model_path = './results/temp.pth'
 # ---------------------------------------------------------------------------
 
 def predict(img):
@@ -26,7 +42,7 @@ def predict(img):
     if isinstance(img, np.ndarray):
         # 转化为 PIL.JpegImagePlugin.JpegImageFile 类型
         img = Image.fromarray(cv2.cvtColor(img,cv2.COLOR_BGR2RGB))
-    
+
     recognize = Recognition(model_path)
     img, all_num, mask_num = recognize.mask_recognize(img)
     # -------------------------------------------------------------------------
