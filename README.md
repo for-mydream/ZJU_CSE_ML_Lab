@@ -1,9 +1,9 @@
 # 人工智能与机器学习 MO平台小作业
 ## 1. 内容介绍
 本仓库包括MO平台的四个小作业。大作业项目中的黑白棋、垃圾分类等在其他仓库中有相关参考资料，本人也是借鉴了那些资料，因此这里不再展示。四个文件夹内容分别包括：
-- 双相障碍检测：训练模型代码'train.py'、模型预测代码与提交代码'main.py'、实验报告markdown文件
-- 机器人自动走迷宫：路径搜索代码'path_search.py'、DQNRobot模型训练代码'DQNRobot.py'、提交的代码'main.py'、实验报告markdown文件
-- 口罩佩戴检测：
+- 双相障碍检测：训练模型代码`train.py`、模型预测代码与提交代码`main.py`、实验报告markdown文件
+- 机器人自动走迷宫：路径搜索代码`path_search.py`、DQNRobot模型训练代码`DQNRobot.py`、提交的代码`main.py`、实验报告markdown文件
+- 口罩佩戴检测：模型训练代码`train.py`、模型预测代码`predict.py`、修改后的新的库函数文件`MobileNetV2.py`、`FaceRec2.py`、实验报告markdown文件
 - 作家风格识别：训练模型代码'train.py'、模型预测代码'predict.py'、提交代码'main.py'、实验报告markdown文件
 
 ## 2. MO平台使用方法与特点：
